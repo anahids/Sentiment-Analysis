@@ -1,8 +1,8 @@
 # Sentiment-Analysis
 
 The presentation will be related to a research project that you will develop from scratch. The main goal of this project is to develop something by yourselves related to sentiment analysis. If you have a project that you are interest in working on and it is relevant for a retrieval information system we can always talk about it. <br>
-Presentations will be on <b>November 27th and 29th.<b> <br>
-Deadline -> <b>27th November before the class<b> <br>
+Presentations will be on <b>November 27th and 29th.</b> <br>
+Deadline -> <b>27th November before the class</b> <br>
 Deliverables:<br>
 1.- To make a research about what sentiment analysis is and why is that relevant for a retrieval system. <br>
 2.- To implement the proof of concept, showing an example of how does that work.<br>
