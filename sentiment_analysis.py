@@ -28,39 +28,27 @@ def clean(reviews):
 
 # Converts each review to a numeric representation
 def vectorization(reviews_train_clean, reviews_test_clean):
-    cv = CountVectorizer(binary=True) # Convert a collection of text documents to a matrix of token counts
-    cv.fit(reviews_train_clean) # Learn a vocabulary dictionary of all tokens in the raw documents. / tokenize and build vocab
-    X = cv.transform(reviews_train_clean) # Transform documents to document-term matrix. X : sparse matrix, [n_samples, n_features]
-    X_test = cv.transform(reviews_test_clean) # Transform documents to document-term matrix. X : sparse matrix, [n_samples, n_features]
-    
-    target = [1 if i < 12500 else 0 for i in range(25000)] # Positive and Negative
-    #classifierRegularization(X, target)
-    final_model = trainingModel(X, target, X_test)
-    #predictors(cv, final_model)
+    cv = CountVectorizer(binary=True)
+    cv.fit(reviews_train_clean)
+    X = cv.transform(reviews_train_clean)
+    X_test = cv.transform(reviews_test_clean)
+    return cv, X, X_test
 
 def classifierRegularization(X, target):
-    # Split arrays or matrices into random train and test subsets. / Using this we can easily split the dataset into the training and the testing datasets in various proportions.
-    # train_size: If float, should be between 0.0 and 1.0 and represent the proportion of the dataset to include in the train split.
     X_train, X_val, y_train, y_val = train_test_split(X, target, train_size = 0.75) 
     for c in [0.01, 0.05, 0.25, 0.5, 1]:
-        lr = LogisticRegression(C=c) # This is the classifier. C : float, optional (default=1.0) = Inverse of regularization strength; must be a positive float. Like in support vector machines, smaller values specify stronger regularization. / supervised machine learning algorithm
-        lr.fit(X_train, y_train) # Training the Model with the features and the labels
-        # lr.predict = Predict class labels for samples in X. Return (array, shape [n_samples]) Predicted class label per sample.
-        # accuracy_score(y_true, y_pred, normalize=True, sample_weight=None) = this function computes subset accuracy: the set of labels predicted for a sample must exactly match the corresponding set of labels in y_true.
+        lr = LogisticRegression(C=c)
+        lr.fit(X_train, y_train)
         print ("Accuracy for C=%s: %s" % (c, accuracy_score(y_val, lr.predict(X_val))))
     
-def trainingModel(X, target, X_test):
+def trainingModel(X, X_Test, target):
     final_model = LogisticRegression(C=0.05)
     final_model.fit(X, target)
-    predictions = final_model.predict(X_test)
-    #print ("Final Accuracy: %s" % accuracy_score(target, predictions))
-    print(list(predictions))
-    return final_model
+    predictions = final_model.predict(X_Test)
+    return final_model, list(predictions)
 
 # The classifier object contains the most informative words that it obtained during analysis. These words basically have a strong say in what’s classified as a positive or a negative review
 def predictors(cv, final_model):
-    # get_feature_names = Array mapping from feature integer indices to feature name.
-    # coef_ = Coefficient of the features in the decision function.  is of shape (1, n_features) when the given problem is binary.
     feature_to_coef = { word: coef for word, coef in zip(cv.get_feature_names(), final_model.coef_[0]) }
 
     for best_positive in sorted(feature_to_coef.items(), key=lambda x: x[1], reverse=True)[:5]:
@@ -77,18 +65,26 @@ def main():
 
     reviews_train = openTraining()
     reviews_train_clean = clean(reviews_train)
+    target = [1 if i < 12500 else 0 for i in range(25000)] # Positive and Negative
 
     if option == "1":
         reviews_test = openFullTest()
         reviews_test_clean = clean(reviews_test)
-        vectorization(reviews_train_clean,reviews_test_clean)
+        cv, X, X_Test = vectorization(reviews_train_clean,reviews_test_clean)
+        #classifierRegularization(X, target)
+        final_model, predictions = trainingModel(X, X_Test, target)
+        print ("\nFinal Accuracy: %s" % accuracy_score(target, predictions))
+        print("\nThe predictions are:")
+        print(predictions)
+        #predictors(cv, final_model)
+
     elif option == "2" :
-        print("Insert review:")
-        review = input()
+        review = input('\nInsert review: ')
         reviewL = [review]
         review_clean = clean(reviewL)
-        vectorization(reviews_train_clean,review_clean)
+        cv, X, X_Test = vectorization(reviews_train_clean,review_clean)
+        final_model, predictions = trainingModel(X, X_Test, target)
+        print("\nThe prediction for %s is: %s" % (review, predictions))
 
 if __name__ == "__main__":
     main()
-
