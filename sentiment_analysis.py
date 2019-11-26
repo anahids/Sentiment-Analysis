@@ -38,12 +38,12 @@ def vectorization(reviews_train_clean, reviews_test_clean):
 def classifierRegularization(X, target):
     X_train, X_val, y_train, y_val = train_test_split(X, target, train_size = 0.75) 
     for c in [0.01, 0.05, 0.25, 0.5, 1]:
-        lr = LogisticRegression(C=c)
+        lr = LogisticRegression(C=c, solver='liblinear')
         lr.fit(X_train, y_train)
         print ("Accuracy for C=%s: %s" % (c, accuracy_score(y_val, lr.predict(X_val))))
     
 def trainingModel(X, X_Test, target):
-    final_model = LogisticRegression(C=0.05)
+    final_model = LogisticRegression(C=0.05, solver='liblinear')
     final_model.fit(X, target)
     predictions = final_model.predict(X_Test)
     return final_model, list(predictions)
@@ -75,8 +75,8 @@ def main():
         classifierRegularization(X, target)
         final_model, predictions = trainingModel(X, X_Test, target)
         print ("\nFinal Accuracy: %s" % accuracy_score(target, predictions))
-        print("\nThe predictions are:")
-        print(predictions)
+        #print("\nThe predictions are:")
+        #print(predictions)
         predictors(cv, final_model)
 
     elif option == "2" :
