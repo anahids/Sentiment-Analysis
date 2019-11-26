@@ -20,7 +20,7 @@ def openFullTest():
 
 # Clean data
 def clean(reviews):
-    REPLACE_NO_SPACE = re.compile("[.;:!\'?,\"()\[\]]")
+    REPLACE_NO_SPACE = re.compile("[*-.;:!\'?,\"()\[\]]")
     REPLACE_WITH_SPACE = re.compile("(<br\s*/><br\s*/>)|(\-)|(\/)")
     reviews = [REPLACE_NO_SPACE.sub("", line.lower()) for line in reviews]
     reviews = [REPLACE_WITH_SPACE.sub(" ", line) for line in reviews]
@@ -28,7 +28,8 @@ def clean(reviews):
 
 # Converts each review to a numeric representation
 def vectorization(reviews_train_clean, reviews_test_clean):
-    cv = CountVectorizer(binary=True)
+    stop_words = ['in', 'of', 'at', 'a', 'the', 'an']
+    cv = CountVectorizer(binary=True, stop_words=stop_words)
     cv.fit(reviews_train_clean)
     X = cv.transform(reviews_train_clean)
     X_test = cv.transform(reviews_test_clean)
@@ -71,12 +72,12 @@ def main():
         reviews_test = openFullTest()
         reviews_test_clean = clean(reviews_test)
         cv, X, X_Test = vectorization(reviews_train_clean,reviews_test_clean)
-        #classifierRegularization(X, target)
+        classifierRegularization(X, target)
         final_model, predictions = trainingModel(X, X_Test, target)
         print ("\nFinal Accuracy: %s" % accuracy_score(target, predictions))
         print("\nThe predictions are:")
         print(predictions)
-        #predictors(cv, final_model)
+        predictors(cv, final_model)
 
     elif option == "2" :
         review = input('\nInsert review: ')
