@@ -58,6 +58,11 @@ def predictors(cv, final_model):
     for best_negative in sorted(feature_to_coef.items(), key=lambda x: x[1])[:5]:
         print (best_negative)
 
+def checkPolarity(predictions):
+    for prediction in predictions:
+        sentiment = "Positive" if prediction == 1 else "Negative" 
+    return sentiment
+
 def main():
     print("Choose an option:")
     print("1 Use the data set test of reviews")
@@ -74,7 +79,7 @@ def main():
         cv, X, X_Test = vectorization(reviews_train_clean,reviews_test_clean)
         classifierRegularization(X, target)
         final_model, predictions = trainingModel(X, X_Test, target)
-        print ("\nFinal Accuracy: %s" % accuracy_score(target, predictions))
+        print ("\nFinal Accuracy: %s\n" % accuracy_score(target, predictions))
         #print("\nThe predictions are:")
         #print(predictions)
         predictors(cv, final_model)
@@ -85,7 +90,8 @@ def main():
         review_clean = clean(reviewL)
         cv, X, X_Test = vectorization(reviews_train_clean,review_clean)
         final_model, predictions = trainingModel(X, X_Test, target)
-        print("\nThe prediction for %s is: %s" % (review, predictions))
+        polarity = checkPolarity(predictions)
+        print("\nThe polarity for %s is: %s" % (review, polarity))
 
 if __name__ == "__main__":
     main()
