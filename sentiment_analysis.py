@@ -6,57 +6,51 @@ from sklearn.model_selection import train_test_split
 
 # Open training movie data
 def openTraining():
-    reviews_train = []
-    for line in open('movie_data/full_train.txt', 'r'):
-        reviews_train.append(line.strip())
-    return reviews_train
+    return [line.strip() for line in open('movie_data/full_train.txt', 'r')]
 
 # Open full test movie data
 def openFullTest():
-    reviews_test = []
-    for line in open('movie_data/full_test.txt', 'r'):
-        reviews_test.append(line.strip())
-    return reviews_test
+    return [line.strip() for line in open('movie_data/full_test.txt', 'r')]
 
 # Clean data
 def clean(reviews):
-    REPLACE_NO_SPACE = re.compile("[*-.;:!\'?,\"()\[\]]")
-    REPLACE_WITH_SPACE = re.compile("(<br\s*/><br\s*/>)|(\-)|(\/)")
-    reviews = [REPLACE_NO_SPACE.sub("", line.lower()) for line in reviews]
-    reviews = [REPLACE_WITH_SPACE.sub(" ", line) for line in reviews]
+    replaceNS = re.compile("[*-.;:!\'?,\"()\[\]]")
+    replaceWS = re.compile("(<br\s*/><br\s*/>)|(\-)|(\/)")
+    reviews = [replaceNS.sub("", review.lower()) for review in reviews]
+    reviews = [replaceWS.sub(" ", review) for review in reviews]
     return reviews
 
 # Converts each review to a numeric representation
-def vectorization(reviews_train_clean, reviews_test_clean):
-    stop_words = ['in', 'of', 'at', 'a', 'the', 'an']
-    cv = CountVectorizer(binary=True, stop_words=stop_words)
-    cv.fit(reviews_train_clean)
-    X = cv.transform(reviews_train_clean)
-    X_test = cv.transform(reviews_test_clean)
-    return cv, X, X_test
+def vectorization(reviewsTrainClean,reviewsTestClean):
+    stopWords = ['in', 'of', 'at', 'a', 'the', 'an']
+    classVect = CountVectorizer(binary=True, stop_words=stopWords)
+    classVect.fit(reviewsTrainClean)
+    X = classVect.transform(reviewsTrainClean)
+    X_test = classVect.transform(reviewsTestClean)
+    return classVect, X, X_test
 
 def classifierRegularization(X, target):
-    X_train, X_val, y_train, y_val = train_test_split(X, target, train_size = 0.75) 
+    X_train, X_fVal, y_train, y_fVal = train_test_split(X, target, train_size = 0.75) 
     for c in [0.01, 0.05, 0.25, 0.5, 1]:
         lr = LogisticRegression(C=c, solver='liblinear')
         lr.fit(X_train, y_train)
-        print ("Accuracy for C=%s: %s" % (c, accuracy_score(y_val, lr.predict(X_val))))
+        print ("Accuracy for C=%s: %s" % (c, accuracy_score(y_fVal, lr.predict(X_fVal))))
     
 def trainingModel(X, X_Test, target):
-    final_model = LogisticRegression(C=0.05, solver='liblinear')
-    final_model.fit(X, target)
-    predictions = final_model.predict(X_Test)
-    return final_model, list(predictions)
+    fModel = LogisticRegression(C=0.05, solver='liblinear')
+    fModel.fit(X, target)
+    predictions = fModel.predict(X_Test)
+    return fModel, list(predictions)
 
 # The classifier object contains the most informative words that it obtained during analysis. These words basically have a strong say in what’s classified as a positive or a negative review
-def predictors(cv, final_model):
-    feature_to_coef = { word: coef for word, coef in zip(cv.get_feature_names(), final_model.coef_[0]) }
+def predictors(classVect, fModel):
+    featureCoef = { word: coef for word, coef in zip(classVect.get_feature_names(), fModel.coef_[0]) }
 
-    for best_positive in sorted(feature_to_coef.items(), key=lambda x: x[1], reverse=True)[:5]:
-        print (best_positive)
+    for bPositive in sorted(featureCoef.items(), key=lambda x: x[1], reverse=True)[:5]:
+        print (bPositive)
     
-    for best_negative in sorted(feature_to_coef.items(), key=lambda x: x[1])[:5]:
-        print (best_negative)
+    for bNegative in sorted(featureCoef.items(), key=lambda x: x[1])[:5]:
+        print (bNegative)
 
 def checkPolarity(predictions):
     for prediction in predictions:
@@ -69,27 +63,28 @@ def main():
     print("2 Use a new review ")
     option = input()
 
-    reviews_train = openTraining()
-    reviews_train_clean = clean(reviews_train)
+    reviewsTrain = openTraining()
+    reviewsTrainClean = clean(reviewsTrain)
     target = [1 if i < 12500 else 0 for i in range(25000)] # Positive and Negative
 
     if option == "1":
-        reviews_test = openFullTest()
-        reviews_test_clean = clean(reviews_test)
-        cv, X, X_Test = vectorization(reviews_train_clean,reviews_test_clean)
+        reviewsTest = openFullTest()
+        reviewsTestClean = clean(reviewsTest)
+        classVect, X, X_Test = vectorization(reviewsTrainClean,reviewsTestClean)
         classifierRegularization(X, target)
-        final_model, predictions = trainingModel(X, X_Test, target)
+        fModel, predictions = trainingModel(X, X_Test, target)
+        #classifierRegularization(X, target)
         print ("\nFinal Accuracy: %s\n" % accuracy_score(target, predictions))
-        #print("\nThe predictions are:")
-        #print(predictions)
-        predictors(cv, final_model)
+        print("\nThe predictions are:")
+        print(predictions)
+        #predictors(classVect, fModel)
 
     elif option == "2" :
         review = input('\nInsert review: ')
         reviewL = [review]
-        review_clean = clean(reviewL)
-        cv, X, X_Test = vectorization(reviews_train_clean,review_clean)
-        final_model, predictions = trainingModel(X, X_Test, target)
+        reviewClean = clean(reviewL)
+        classVect, X, X_Test = vectorization(reviewsTrainClean,reviewClean)
+        fModel, predictions = trainingModel(X, X_Test, target)
         polarity = checkPolarity(predictions)
         print("\nThe polarity for %s is: %s" % (review, polarity))
 
